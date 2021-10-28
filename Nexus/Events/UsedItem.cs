@@ -1,0 +1,28 @@
+﻿using Nexus.Entities;
+using Nexus.Entities.Items.Base;
+using Nexus.EventSystem;
+
+namespace Nexus.Events
+{
+    /// <summary>
+    /// Fires after the player has used a usable item.
+    /// </summary>
+    public class UsedItem : Event
+    {
+        /// <summary>
+        /// Gets the player who used the medical item.
+        /// </summary>
+        public Player Player { get; }
+
+        /// <summary>
+        /// Gets the usable item that the player consumed.
+        /// </summary>
+        public BaseUsableItem Item { get; }
+
+        public UsedItem(Player player, BaseUsableItem item)
+        {
+            Player = player;
+            Item = item;
+        }
+    }
+}
