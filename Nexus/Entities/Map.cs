@@ -34,6 +34,7 @@ namespace Nexus.Entities
         internal static List<Chamber> chambers;
         internal static List<Tesla> tesla;
         internal static List<Generator> generators;
+        internal static List<GameObject> tantrums;
         internal static List<Workstation> stations;
         internal static List<Window> windows;
         internal static List<Ragdoll> ragdolls;
@@ -46,6 +47,8 @@ namespace Nexus.Entities
         internal static Intercom icom;
         internal static Scp914 scp914;
         internal static Recontainer079 recontain;
+        internal static LureSubjectContainer lsc;
+        internal static GameObject femurBreaker;
 
         internal static RaycastHit[] cache;
 
@@ -68,6 +71,7 @@ namespace Nexus.Entities
             targets = new List<Target>();
             elevators = new List<Elevator>();
             elevatorObjects = new List<ElevatorChamber>();
+            tantrums = new List<GameObject>();
 
             cache = new RaycastHit[1];
         }
@@ -128,6 +132,11 @@ namespace Nexus.Entities
         /// Gets the generators on this map.
         /// </summary>
         public static IReadOnlyList<Generator> Generators => generators;
+
+        /// <summary>
+        /// Gets all tantrums on the map.
+        /// </summary>
+        public static IReadOnlyList<GameObject> Tantrums => tantrums;
 
         /// <summary>
         /// Gets the workstations on this map.
@@ -198,6 +207,21 @@ namespace Nexus.Entities
         /// Gets the <see cref="Recontainer079"/> instance.
         /// </summary>
         public static Recontainer079 Recontainer => recontain;
+
+        /// <summary>
+        /// Gets the <see cref="global::LureSubjectContainer"/> instance.
+        /// </summary>
+        public static LureSubjectContainer LureSubjectContainer => lsc;
+
+        /// <summary>
+        /// Gets the Femur Breaker.
+        /// </summary>
+        public static GameObject FemurBreaker => femurBreaker;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the SCP-106 container was used or not.
+        /// </summary>
+        public static bool Scp106Contained { get => OneOhSixContainer.used; set => OneOhSixContainer.used = value; }
 
         /// <summary>
         /// Gets all pickups of the specified type.
@@ -274,7 +298,7 @@ namespace Nexus.Entities
         /// <param name="time">The duration of the overcharge.</param>
         /// <param name="doors">Whether or not to lock doors too.</param>
         /// <param name="onlyZone">Restrict to this zone only.</param>
-        public static void Overcharge(float time = 10f, bool doors = false, FacilityZone? onlyZone = null)
+        public static void Overcharge(float time = 10f, bool doors = false, ZoneType? onlyZone = null)
         {
             if (doors)
             {
@@ -292,7 +316,7 @@ namespace Nexus.Entities
                     if (!RoomIdentifier.RoomsByCoordinatess.TryGetValue(RoomIdUtils.PositionToCoords(basicDoor.transform.position), out RoomIdentifier rId))
                         continue;
 
-                    if (onlyZone.HasValue && rId.Zone != onlyZone.Value)
+                    if (onlyZone.HasValue && (ZoneType)rId.Zone != onlyZone.Value)
                         continue;
 
                     if (!onlyZone.HasValue && rId.Zone != FacilityZone.HeavyContainment)
@@ -310,7 +334,7 @@ namespace Nexus.Entities
                 if (!RoomIdentifier.RoomsByCoordinatess.TryGetValue(RoomIdUtils.PositionToCoords(ctrl.transform.position), out RoomIdentifier rId))
                     continue;
 
-                if (onlyZone.HasValue && rId.Zone != onlyZone.Value)
+                if (onlyZone.HasValue && (ZoneType)rId.Zone != onlyZone.Value)
                     continue;
 
                 if (!onlyZone.HasValue && rId.Zone != FacilityZone.HeavyContainment)
@@ -344,6 +368,7 @@ namespace Nexus.Entities
             targets.Clear();
             elevators.Clear();
             elevatorObjects.Clear();
+            tantrums.Clear();
 
             BaseItem.items.Clear();
             BasePickup.pickups.Clear();
@@ -436,6 +461,8 @@ namespace Nexus.Entities
             scp914 = new Scp914(FindComponent<global::Scp914.Scp914Controller>());
 
             recontain = FindComponent<Recontainer079>();
+            lsc = FindComponent<LureSubjectContainer>();
+            femurBreaker = GameObject.FindGameObjectWithTag("FemurBreaker");
 
             if (PlayersList.host == null)
                 Log.DebugFeature<Map>("Failed to set the PlayersList.host instance!");
@@ -455,6 +482,10 @@ namespace Nexus.Entities
             Log.DebugFeature<Map>($"Added a spawned target: {ev.Target.NetId}");
         }
 
+        [EventHandler(typeof(SpawningTantrum))]
+        internal static void OnSpawningTantrum(SpawningTantrum ev)
+            => tantrums.Add(ev.Tantrum);
+
         internal static void TargetDespawned(ShootingTarget target)
         {
             var old = targets;
@@ -467,7 +498,7 @@ namespace Nexus.Entities
 
                 if (oldTarget.NetId == target.netId)
                 {
-                    Map.targets.RemoveAt(i);
+                    targets.RemoveAt(i);
 
                     return;
                 }

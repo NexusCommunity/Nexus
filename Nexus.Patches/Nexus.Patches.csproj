@@ -74,6 +74,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\UnityEngine.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\References\UnityEngine.AudioModule.dll</HintPath>
@@ -81,6 +85,10 @@
     <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Nexus\bin\Debug\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +100,9 @@
     <Compile Include="Events\AnnouncingScpTerminationPatch.cs" />
     <Compile Include="Events\BannedPatch.cs" />
     <Compile Include="Events\BanningPatch.cs" />
+    <Compile Include="Events\BlinkingPatch.cs" />
+    <Compile Include="Events\CalmingDownPatch.cs" />
+    <Compile Include="Events\Containing106Patch.cs" />
     <Compile Include="Events\RoundStartingPatch.cs" />
     <Compile Include="Events\RoundWaitingPatch.cs" />
     <Compile Include="Manager.cs" />

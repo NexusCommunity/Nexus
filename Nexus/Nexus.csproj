@@ -83,6 +83,8 @@
   <ItemGroup>
     <Compile Include="DefaultValues\DefaultHealth.cs" />
     <Compile Include="DefaultValues\DefaultItems.cs" />
+    <Compile Include="Entities\Dummy.cs" />
+    <Compile Include="Entities\DummyInfo.cs" />
     <Compile Include="Entities\Elevator.cs" />
     <Compile Include="Entities\ElevatorChamber.cs" />
     <Compile Include="Entities\Intercom.cs" />
@@ -236,6 +238,7 @@
     <Compile Include="Events\PlayerJoining.cs" />
     <Compile Include="Events\PlayerLeaving.cs" />
     <Compile Include="Events\PreAuthentificating.cs" />
+    <Compile Include="Events\PryingGate.cs" />
     <Compile Include="Events\ReceivingEffect.cs" />
     <Compile Include="Events\Recontained.cs" />
     <Compile Include="Events\ReloadingWeapon.cs" />
@@ -263,6 +266,7 @@
     <Compile Include="Events\Spawning.cs" />
     <Compile Include="Events\SpawningItem.cs" />
     <Compile Include="Events\SpawningRagdoll.cs" />
+    <Compile Include="Events\SpawningTantrum.cs" />
     <Compile Include="Events\StartingSpeaker.cs" />
     <Compile Include="Events\StartPryingGate.cs" />
     <Compile Include="Events\StoppingSpeaker.cs" />

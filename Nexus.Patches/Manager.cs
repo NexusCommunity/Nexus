@@ -14,8 +14,11 @@ namespace Nexus.Patches
     public class Manager
     {
         internal Assembly assembly;
+
         internal List<Type> dis;
         internal List<MethodBase> patches;
+
+        internal Dictionary<Type, Type> linkedPatches;
 
         internal Harmony harmony;
 
@@ -29,13 +32,33 @@ namespace Nexus.Patches
             dis = ListPool<Type>.Shared.Rent();
             patches = ListPool<MethodBase>.Shared.Rent();
 
+            linkedPatches = new Dictionary<Type, Type>();
+
             harmony = new Harmony($"nexus@{indexer++}");
+
+            var eventAssembly = typeof(BuildInfo).Assembly;
+
+            foreach (Type type in assembly.GetTypes())
+            {
+                string eventName = type.Name.Replace("Patch", "");
+
+                Type eventType = eventAssembly.GetType($"Nexus.Events.{eventName}");
+
+                if (eventType != null)
+                {
+                    linkedPatches.Add(type, eventType);
+                }
+            }
+
+            Log.Info("Nexus", $"Linked {linkedPatches.Count} patches!");
         }
 
         ~Manager()
         {
             ListPool<Type>.Shared.Return(dis);
             ListPool<MethodBase>.Shared.Return(patches);
+
+            linkedPatches.Clear();
 
             harmony = null;
         }
@@ -57,6 +80,11 @@ namespace Nexus.Patches
         /// Gets a <see cref="IReadOnlyList{T}"/> of patched methods.
         /// </summary>
         public IReadOnlyList<MethodBase> Patches { get => patches; }
+
+        /// <summary>
+        /// Gets a <see cref="IReadOnlyDictionary{TKey, TValue}"/> of linked patches.
+        /// </summary>
+        public IReadOnlyDictionary<Type, Type> LinkedPatches { get => linkedPatches; }
 
         /// <summary>
         /// Gets a value indicating whether or not to show debug messages.

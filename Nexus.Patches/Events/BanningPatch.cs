@@ -1,7 +1,6 @@
 ﻿using Nexus.Events;
 using Nexus.EventSystem;
 using Nexus.Entities;
-using Nexus.ModManager;
 
 using HarmonyLib;
 using NorthwoodLib;

@@ -1,6 +1,8 @@
 ﻿using Nexus.Entities;
 using Nexus.EventSystem;
 
+using PlayableScps;
+
 namespace Nexus.Events
 {
     /// <summary>
@@ -11,12 +13,17 @@ namespace Nexus.Events
         /// <summary>
         /// Gets the player playing as SCP-096.
         /// </summary>
-        public Player Scp { get; }
+        public Player Player { get; }
 
-        public CalmingDown(Player scp, bool allow)
+        /// <summary>
+        /// Gets the SCP-096 instance.
+        /// </summary>
+        public Scp096 Scp { get; }
+
+        public CalmingDown(Player ply, Scp096 scp, bool allow)
         {
+            Player = ply;
             Scp = scp;
-
             IsAllowed = allow;
         }
     }

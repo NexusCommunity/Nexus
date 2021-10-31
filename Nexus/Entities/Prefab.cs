@@ -27,7 +27,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets the prefab's ID which can be used in <see cref="NetworkClient.prefabs"/>.
         /// </summary>
-        public Guid ID { get; }
+        public Guid? ID { get; }
 
         /// <summary>
         /// Gets the prefab's type.
@@ -45,6 +45,17 @@ namespace Nexus.Entities
             ID = prefab.Key;
             Type = GetPrefabType(prefab.Value.name);
             Name = prefab.Value.name;
+        }
+
+        internal Prefab(GameObject prefab)
+        {
+            if (prefab == null)
+                return;
+
+            GameObject = prefab;
+            ID = null;
+            Type = GetPrefabType(prefab.name);
+            Name = prefab.name;
         }
 
         /// <summary>
@@ -95,9 +106,9 @@ namespace Nexus.Entities
         /// <param name="rotation">The rotation to spawn with.</param>
         /// <param name="spawn">Whether or not to spawn the object.</param>
         /// <returns>The spawned object.</returns>
-        public TObject Spawn<TObject>(Vector3? position = null, Vector3? scale = null, Quaternion? rotation = null, bool spawn = false) where TObject : Object
+        public TObject Spawn<TObject>(Vector3? position = null, Vector3? scale = null, Quaternion? rotation = null, bool spawn = false) where TObject : Component
         {
-            GameObject clone = Copy<TObject>() as GameObject;
+            TObject clone = Copy<TObject>();
 
             if (position.HasValue)
                 clone.transform.position = position.Value;
@@ -109,9 +120,9 @@ namespace Nexus.Entities
                 clone.transform.rotation = rotation.Value;
 
             if (spawn)
-                clone.Spawn();
+                clone.gameObject.Spawn();
 
-            return clone as TObject;
+            return clone;
         }
 
         /// <summary>
@@ -126,8 +137,8 @@ namespace Nexus.Entities
         /// </summary>
         /// <typeparam name="TObject">The type to copy as.</typeparam>
         /// <returns>The created instance.</returns>
-        public TObject Copy<TObject>() where TObject : Object
-            => Object.Instantiate(GameObject as TObject);
+        public TObject Copy<TObject>() where TObject : Component
+            => Object.Instantiate(GameObject.GetComponent<TObject>());
 
         /// <summary>
         /// Gets a prefab by it's type.
@@ -223,6 +234,9 @@ namespace Nexus.Entities
                     case "Scp2176PedestalStructure Variant":
                         type = PrefabType.Scp2176PedestalStructure;
                         break;
+                    default:
+                        type = PrefabType.Portal106;
+                        break;
                 
                 }
             }
@@ -289,6 +303,8 @@ namespace Nexus.Entities
                     return "Spawnable Work Station Structure";
                 case PrefabType.Scp2176PedestalStructure:
                     return "Scp2176PedestalStructure Variant";
+                case PrefabType.Portal106:
+                    return PlayersList.host.Hub.scp106PlayerScript.portalPrefab?.name ?? "PORTAL106";
                 default:
                     return type.ToString();
             }
@@ -304,6 +320,9 @@ namespace Nexus.Entities
 
             foreach (var prefab in NetworkClient.prefabs)
                 allPrefabs.Add(new Prefab(prefab));
+
+            if (ReferenceHub._hostHub != null)
+                allPrefabs.Add(new Prefab(ReferenceHub._hostHub?.scp106PlayerScript?.portalPrefab));
         }
     }
 }

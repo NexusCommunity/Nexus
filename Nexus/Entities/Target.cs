@@ -188,26 +188,7 @@ namespace Nexus.Entities
         /// <returns></returns>
         public static ShootingTarget SpawnBase(TargetType type, Vector3 pos, Vector3 scale, Quaternion rot)
         {
-            var prefab = type.GetPrefabName();
-
-            foreach (var gameObj in NetworkClient.prefabs.Values)
-            {
-                if (gameObj.name != prefab)
-                    continue;
-
-                if (gameObj.TryGetComponent(out ShootingTarget target))
-                {
-                    var copy = Object.Instantiate(target, pos, rot);
-
-                    copy.transform.localScale = scale;
-
-                    NetworkServer.Spawn(copy.gameObject);
-
-                    return copy;
-                }
-            }
-
-            return null;
+            return Prefab.GetPrefab(Prefab.GetPrefabType(type.GetPrefabName())).Spawn<ShootingTarget>(pos, scale, rot, true);
         }
 
         /// <summary>

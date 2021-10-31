@@ -14,14 +14,10 @@ namespace Nexus.Entities
     /// </summary>
     public static class Server
     {
-        internal static Dictionary<string, GameObject> prefabs;
-
         static Server()
         {
             Version = new System.Version(GameCore.Version.Major, GameCore.Version.Minor, GameCore.Version.Revision);
             Random = new System.Random();
-
-            prefabs = new Dictionary<string, GameObject>();
         }
 
         /// <summary>
@@ -131,18 +127,5 @@ namespace Nexus.Entities
         /// </summary>
         public static void Kill()
             => Shutdown.Quit(true);
-
-        #region API
-
-        internal static void FillPrefabs()
-        {
-            foreach (var pair in NetworkClient.prefabs)
-            {
-                if (!prefabs.ContainsKey(pair.Value.name))
-                    prefabs.Add(pair.Value.name, pair.Value);
-            }
-        }
-
-        #endregion
     }
 }

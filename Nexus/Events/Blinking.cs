@@ -1,29 +1,31 @@
 ﻿using Nexus.Entities;
 using Nexus.EventSystem;
 
-using System.Collections.Generic;
+using PlayableScps;
+
 
 namespace Nexus.Events
 {
     /// <summary>
     /// Fires when SCP-173 forces players to blink.
     /// </summary>
-    public class Blinking : Event
+    public class Blinking : BoolEvent
     {
         /// <summary>
         /// Gets the player playing as SCP-173.
         /// </summary>
-        public Player Scp { get; }
+        public Player Player { get; }
 
         /// <summary>
-        /// Gets the blinking players.
+        /// Gets the SCP-173 instance.
         /// </summary>
-        public HashSet<Player> Targets { get; }
+        public Scp173 Scp { get; }
 
-        public Blinking(Player scp, HashSet<Player> targets)
+        public Blinking(Player ply, Scp173 scp, bool allow)
         {
+            Player = ply;
             Scp = scp;
-            Targets = targets;
+            IsAllowed = allow;
         }
     }
 }

@@ -98,6 +98,8 @@ namespace Nexus.Enums
         AdrenalineMedkitStructure,
         Scp2176PedestalStructure,
         HegProjectile,
-        FlashbangProjectile
+        FlashbangProjectile,
+
+        Portal106
     }
 }

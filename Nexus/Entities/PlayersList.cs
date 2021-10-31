@@ -15,11 +15,15 @@ namespace Nexus.Entities
     public static class PlayersList
     {
         internal static Dictionary<ReferenceHub, Player> players;
+        internal static List<Player> dummyPlayers;
 
         internal static Player host;
 
         static PlayersList()
-            => players = new Dictionary<ReferenceHub, Player>();
+        {
+            players = new Dictionary<ReferenceHub, Player>();
+            dummyPlayers = new List<Player>();
+        }
 
         /// <summary>
         /// Gets the hosting player / server player.
@@ -30,6 +34,11 @@ namespace Nexus.Entities
         /// Gets a read-only collection of all players on the server.
         /// </summary>
         public static IReadOnlyCollection<Player> List => players.Values;
+
+        /// <summary>
+        /// Gets a read-only list of all spawned dummies by the <see cref="Dummy"/> class.
+        /// </summary>
+        public static IReadOnlyList<Player> DummyPlayers => dummyPlayers;
 
         /// <summary>
         /// Gets a read-only dictionary of all players and their <see cref="ReferenceHub"/>s.

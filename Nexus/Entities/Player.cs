@@ -463,7 +463,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets or sets a value indicating whether or not this player is handcuffed.
         /// </summary>
-        public bool IsCuffed { get => DisarmedPlayers.IsDisarmed(Inventory); set => DisarmedPlayers.SetDisarmedStatus(Inventory, Inventory); }
+        public bool IsCuffed { get => DisarmedPlayers.IsDisarmed(Inventory); set => DisarmedPlayers.SetDisarmedStatus(Inventory, PlayersList.Host.Inventory); }
 
         /// <summary>
         /// Gets a value indicating whether this player is the host player or not.
@@ -576,6 +576,13 @@ namespace Nexus.Entities
         /// Gets or sets a value indicating whether the player can send inputs or not.
         /// </summary>
         public bool CanSendInputs { get => Hub.fpc.NetworkforceStopInputs; set => Hub.fpc.NetworkforceStopInputs = value; }
+
+        /// <summary>
+        /// Gets the distance from the other position.
+        /// </summary>
+        /// <param name="otherPos">The other position.</param>
+        /// <returns>The distance from the other position.</returns>
+        public float Distance(Vector3 otherPos) => Vector3.Distance(Position, otherPos);
 
         /// <summary>
         /// Sets the player's <see cref="RoleType"/>.
@@ -872,6 +879,21 @@ namespace Nexus.Entities
 
             return IsMuted;
         }
+
+        /// <summary>
+        /// Spawns a tantrum at the player.
+        /// </summary>
+        /// <returns>The spawned tantrum's game object.</returns>
+        public GameObject SpawnTantrum()
+            => Prefab.GetPrefab(PrefabType.Tantrum).Spawn(Position, Vector3.one, RotationsQ, true);
+
+        /// <summary>
+        /// Spawns a tantrum at the player.
+        /// </summary>
+        /// <param name="scale">The scale of the tantrum.</param>
+        /// <returns>The spawned tantrum's game object.</returns>
+        public GameObject SpawnTantrum(Vector3 scale)
+            => Prefab.GetPrefab(PrefabType.Tantrum).Spawn(Position, scale, RotationsQ, true);
 
         /// <summary>
         /// Gets a <see cref="bool"/> describing whether or not the given <see cref="PlayerEffect">status effect</see> is currently enabled.
