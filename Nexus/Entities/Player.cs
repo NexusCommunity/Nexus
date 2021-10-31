@@ -4,6 +4,7 @@ using System.Linq;
 
 using Mirror;
 using Mirror.LiteNetLib4Mirror;
+using MEC;
 
 using UnityEngine;
 
@@ -24,6 +25,7 @@ using Nexus.Toolkit;
 using InventorySystem;
 using InventorySystem.Disarming;
 using InventorySystem.Items;
+using InventorySystem.Items.Firearms;
 using InventorySystem.Items.Firearms.Attachments;
 
 using Assets._Scripts.Dissonance;
@@ -39,6 +41,7 @@ namespace Nexus.Entities
     {
         internal readonly List<BaseItem> items;
         internal readonly List<BasePickup> droppedItems;
+        internal readonly List<Ragdoll> ragdolls;
         internal readonly List<RoleType> roles;
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace Nexus.Entities
             var icom = hub.GetComponent<global::Intercom>();
 
             if (icom == null)
-                Log.NexusError($"The Intercom component of player {UserId} is null!");
+                Log.Error($"The Intercom component of player {UserId} is null!");
 
             if (icom != null)
                 Intercom = new Intercom(icom);
@@ -74,14 +77,16 @@ namespace Nexus.Entities
             items = ListPool<BaseItem>.Shared.Rent();
             droppedItems = ListPool<BasePickup>.Shared.Rent();
             roles = ListPool<RoleType>.Shared.Rent();
-            TargetGhosts = ListPool<Player>.Shared.Rent();
+            ragdolls = ListPool<Ragdoll>.Shared.Rent();
+
+            Ammo = AmmoManager.GetAmmoManager(this);
         }
 
         ~Player()
         {
             ListPool<BaseItem>.Shared.Return(items);
             ListPool<BasePickup>.Shared.Return(droppedItems);
-            ListPool<Player>.Shared.Return(TargetGhosts);
+            ListPool<Ragdoll>.Shared.Return(ragdolls);
             ListPool<RoleType>.Shared.Return(roles);
         }
 
@@ -109,6 +114,11 @@ namespace Nexus.Entities
         /// Gets the player's <see cref="InventorySystem.Inventory"/>.
         /// </summary>
         public Inventory Inventory { get; }
+
+        /// <summary>
+        /// Gets the player's ammo manager.
+        /// </summary>
+        public AmmoManager Ammo { get; }
 
         /// <summary>
         /// Gets the player's <see cref="global::Broadcast"/>.
@@ -166,9 +176,14 @@ namespace Nexus.Entities
         public IReadOnlyList<BaseItem> Items { get => items; }
 
         /// <summary>
-        /// Gets the player's ammo.
+        /// Gets a read-only list of all ragdolls owned by this player.
         /// </summary>
-        public IReadOnlyDictionary<ItemType, ushort> Ammo { get => Hub.inventory.UserInventory.ReserveAmmo; }
+        public IReadOnlyList<Ragdoll> Ragdolls { get => ragdolls; }
+
+        /// <summary>
+        /// Gets a read-only list of owned firearms.
+        /// </summary>
+        public IReadOnlyList<FirearmItem> Firearms { get => items.Where(x => x is FirearmItem).Select(x => x as FirearmItem).ToList(); }
 
         /// <summary>
         /// Gets or sets the player's SCP-079 abilities. May be null.
@@ -183,18 +198,33 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets or sets the player's current item.
         /// </summary>
-        public BaseItem CurrentItem { get => BaseItem.Get(Inventory.CurInstance); set => Inventory.SetItem(value); }
+        public BaseItem CurrentItem
+        {
+            get => BaseItem.Get(Inventory.CurInstance);
+            set
+            {
+                if (value == null || value.Id == ItemType.None)
+                    Inventory.ServerSelectItem(0);
+                else
+                    if (!Inventory.UserInventory.Items.TryGetValue(value.Serial, out _))
+                {
+                    AddItem(value);
+
+                    Timing.CallDelayed(0.5f, () => Inventory.ServerSelectItem(value.Serial));
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets the player's current item.
         /// </summary>
         public ItemType CurrentItemId { get => CurrentItem?.Id ?? ItemType.None; 
-            set => CurrentItem = new BaseItem(Server.Host.Inventory.ServerAddItem(value)); }
+            set => CurrentItem = new BaseItem(value); }
 
         /// <summary>
         /// Gets a <see cref="HashSet{T}"/> of players that this player can't see.
         /// </summary>
-        public List<Player> TargetGhosts { get; }
+        public HashSet<Player> TargetGhosts { get; }
 
         /// <summary>
         /// Gets the player's current <see cref="Entities.Camera"/>, or null if this player is not SCP-079.
@@ -217,6 +247,37 @@ namespace Nexus.Entities
         public Rank Rank { get; }
 
         /// <summary>
+        /// Gets or sets the player that cuffed this player.
+        /// </summary>
+        public Player Cuffer
+        {
+            get
+            {
+                foreach (DisarmedPlayers.DisarmedEntry disarmed in DisarmedPlayers.Entries)
+                {
+                    if (PlayersList.Get(disarmed.DisarmedPlayer) == this)
+                        return PlayersList.Get(disarmed.Disarmer);
+                }
+
+                return null;
+            }
+            set
+            {
+                for (int i = 0; i < DisarmedPlayers.Entries.Count; i++)
+                {
+                    if (DisarmedPlayers.Entries[i].DisarmedPlayer == Inventory.netId)
+                    {
+                        DisarmedPlayers.Entries.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                if (value != null)
+                    Inventory.SetDisarmedStatus(value.Inventory);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the player's current role.
         /// </summary>
         public RoleType Role { get => Hub.characterClassManager.NetworkCurClass; set => ChangeRole(value); }
@@ -224,12 +285,17 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets the player's current <see cref="global::Team"/>.
         /// </summary>
-        public Team Team { get; }
+        public Team Team { get => Role.GetTeam(); }
 
         /// <summary>
         /// Gets the player's current <see cref="global::Fraction"/>.
         /// </summary>
         public Faction Fraction { get => Hub.characterClassManager.Faction; }
+
+        /// <summary>
+        /// Gets the player's leading team.
+        /// </summary>
+        public LeadingTeam LeadingTeam { get => Team.GetLeadingTeam(); }
 
         /// <summary>
         /// Gets or sets the player's info area. You can hide all those annoying elements if you want to.
@@ -275,6 +341,11 @@ namespace Nexus.Entities
         /// Gets or sets the player's rotation as a <see cref="Quaternion"/>.
         /// </summary>
         public Quaternion RotationsQ { get => PlayerCamera.rotation; set => PlayerCamera.transform.rotation = value; }
+
+        /// <summary>
+        /// Gets the color of the player's role.
+        /// </summary>
+        public Color RoleColor { get => Role.GetColor(); }
 
         /// <summary>
         /// Gets or sets the player's UserId.
@@ -463,7 +534,37 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets or sets a value indicating whether or not this player is handcuffed.
         /// </summary>
-        public bool IsCuffed { get => DisarmedPlayers.IsDisarmed(Inventory); set => DisarmedPlayers.SetDisarmedStatus(Inventory, PlayersList.Host.Inventory); }
+        public bool IsCuffed { get => Cuffer != null; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is reloading his weapon or not.
+        /// </summary>
+        public bool IsReloading { get => Inventory.CurInstance is Firearm firearm && !firearm.AmmoManagerModule.Standby; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is aiming or not.
+        /// </summary>
+        public bool IsAiming { get => Inventory.CurInstance is Firearm firearm && firearm.AdsModule.ServerAds; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player has his flashlight module enabled or not.
+        /// </summary>
+        public bool HasFlashlightEnabled { get => Inventory.CurInstance is Firearm firearm && firearm.Status.Flags.HasFlag(FirearmStatusFlags.FlashlightEnabled); }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is sprinting or not.
+        /// </summary>
+        public bool IsSprinting { get => MoveState == PlayerMovementState.Sprinting; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is walking or not.
+        /// </summary>
+        public bool IsWalking { get => MoveState == PlayerMovementState.Walking; }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is sneaking or not.
+        /// </summary>
+        public bool IsSneaking { get => MoveState == PlayerMovementState.Sneaking; }
 
         /// <summary>
         /// Gets a value indicating whether this player is the host player or not.
@@ -568,9 +669,9 @@ namespace Nexus.Entities
         public bool IsConnected { get => Hub?.gameObject != null; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the player has an active hint or not.
+        /// Gets or sets a value indicating whether the player can use the SCP-939 alt voice chat or not.
         /// </summary>
-        public bool HasHint { get; set; }
+        public bool CanUseScp939Chat { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the player can send inputs or not.
@@ -626,14 +727,14 @@ namespace Nexus.Entities
         /// Removes the held item from the player's inventory.
         /// </summary>
         public void RemoveItem() 
-            => Hub.inventory.ServerRemoveItem(CurrentItem.Serial, CurrentItem.Base.PickupDropModel);
+            => Hub.inventory.ServerRemoveItem(CurrentItem?.Serial ?? 0, CurrentItem?.Base.PickupDropModel);
 
         /// <summary>
         /// Drops an item from the player's inventory.
         /// </summary>
         /// <param name="item">The item to be dropped.</param>
         public void DropItem(BaseItem item)
-            => Inventory.ServerDropItem(item.Serial);
+            => Inventory.ServerDropItem(item?.Serial ?? 0);
 
         /// <summary>
         /// Indicates whether or not the player has an item.
@@ -739,11 +840,11 @@ namespace Nexus.Entities
         /// Resets the player's inventory to the provided list of items, clearing any items it already possess.
         /// </summary>
         /// <param name="newItems">The new items that have to be added to the inventory.</param>
-        public void ResetInventory(List<ItemType> newItems)
+        public void ResetInventory(IEnumerable<ItemType> newItems)
         {
             ClearInventory();
 
-            if (newItems.Count > 0)
+            if (newItems.Count() > 0)
             {
                 foreach (ItemType item in newItems)
                     AddItem(item);
@@ -753,12 +854,49 @@ namespace Nexus.Entities
         /// <summary>
         /// Clears the player's inventory, including all ammo and items.
         /// </summary>
-        public void ClearInventory() => Hub.inventory.UserInventory.Items.Clear();
+        public void ClearInventory()
+            => items.ForEach(x => Inventory.ServerRemoveItem(x.Serial, x.Base.PickupDropModel));
 
         /// <summary>
-        /// Drops all items in the player's inventory, including all ammo and items.
+        /// Sends all items to the player's client.
         /// </summary>
-        public void DropItems() => Hub.inventory.ServerDropEverything();
+        public void SendItems()
+        {
+            Hub.inventory.ServerSendAmmo();
+            Hub.inventory.ServerSendItems();
+        }
+
+        /// <summary>
+        /// Drops every item in the player's inventory (except ammo).
+        /// </summary>
+        public void DropItems()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+
+                if (item.Id.IsAmmo())
+                    continue;
+
+                Inventory.ServerDropItem(item.Serial);
+
+                items.RemoveAt(i);
+
+                continue;
+            }
+        }
+
+        /// <summary>
+        /// Drops all ammo from the player's inventory.
+        /// </summary>
+        public void DropAmmo()
+            => Ammo.DropAmmo();
+
+        /// <summary>
+        /// Drops all items from the player's inventory.
+        /// </summary>
+        public void DropAllItems()
+            => Inventory.ServerDropEverything();
 
         /// <summary>
         /// Add an item of the specified type with default durability(ammo/charge) and no mods to the player's inventory.
@@ -769,13 +907,34 @@ namespace Nexus.Entities
         {
             BaseItem item = BaseItem.Get(Inventory.ServerAddItem(itemType));
 
-            AttachmentsServerHandler.SetupProvidedWeapon(Hub, item.Base);
-
             if (item is FirearmItem firearm)
-                firearm.Ammo = firearm.MaxAmmo;
+            {
+                var fBase = firearm.AsBase<Firearm>();
+
+                if (AttachmentsServerHandler.PlayerPreferences.TryGetValue(Hub, out Dictionary<ItemType, uint> dict) &&
+                    dict.TryGetValue(itemType, out uint code))
+                {
+                    fBase.ApplyAttachmentsCode(code, true);
+                }
+
+                FirearmStatusFlags flags = FirearmStatusFlags.MagazineInserted;
+
+                if (fBase.CombinedAttachments.AdditionalPros.HasFlagFast(AttachmentDescriptiveAdvantages.Flashlight))
+                    flags |= FirearmStatusFlags.FlashlightEnabled;
+
+                firearm.Status = new FirearmStatus(firearm.MaxAmmo, flags, fBase.GetCurrentAttachmentsCode());
+            }
 
             return item;
         }
+
+        /// <summary>
+        /// Returns a list of items that match the generic parameter type.
+        /// </summary>
+        /// <typeparam name="TItem">The type of items to retrieve.</typeparam>
+        /// <returns>The list of retrieved items.</returns>
+        public List<TItem> GetItems<TItem>() where TItem : ItemBase
+            => Inventory.UserInventory.Items.Values.Where(x => x is TItem).Select(x => x as TItem).ToList();
 
         /// <summary>
         /// Add an item to the player's inventory.
@@ -795,20 +954,63 @@ namespace Nexus.Entities
         /// </summary>
         /// <param name="itemBase">The item to be added.</param>
         /// <returns>The item that was added.</returns>
-        public BaseItem AddItem(ItemBase itemBase)
+        public BaseItem AddItem(ItemBase itemBase, BaseItem item = null)
         {
-            BaseItem item = BaseItem.Get(itemBase);
-            Inventory.UserInventory.Items[itemBase.PickupDropModel.NetworkInfo.Serial] = itemBase;
+            try
+            {
+                if (item == null)
+                    item = BaseItem.Get(itemBase);
 
-            itemBase.OnAdded(itemBase.PickupDropModel);
+                int ammo = -1;
 
-            if (itemBase is InventorySystem.Items.Firearms.Firearm firearm)
-                AttachmentsServerHandler.SetupProvidedWeapon(Hub, firearm);
+                FirearmItem firearm = item.As<FirearmItem>();
 
-            items.Add(item);
+                if (firearm != null)
+                {
+                    ammo = firearm.Ammo;
+                }
 
-            Inventory.SendItemsNextFrame = true;
-            return item;
+                itemBase.Owner = Hub;
+
+                Inventory.UserInventory.Items[item.Serial] = itemBase;
+
+                if (itemBase.PickupDropModel != null)
+                {
+                    itemBase.OnAdded(itemBase.PickupDropModel);
+                }
+
+                var fBase = firearm.AsBase<Firearm>();
+
+                if (AttachmentsServerHandler.PlayerPreferences.TryGetValue(Hub, out Dictionary<ItemType, uint> dict) &&
+                    dict.TryGetValue(item.Id, out uint code))
+                {
+                    fBase.ApplyAttachmentsCode(code, true);
+                }
+
+                FirearmStatusFlags flags = FirearmStatusFlags.MagazineInserted;
+
+                if (fBase.CombinedAttachments.AdditionalPros.HasFlagFast(AttachmentDescriptiveAdvantages.Flashlight))
+                    flags |= FirearmStatusFlags.FlashlightEnabled;
+
+                firearm.Status = new FirearmStatus(firearm.MaxAmmo, flags, fBase.GetCurrentAttachmentsCode());
+
+                if (itemBase is IAcquisitionConfirmationTrigger acquisitionConfirmationTrigger)
+                {
+                    acquisitionConfirmationTrigger.ServerConfirmAcqusition();
+                }
+
+                items.Add(item);
+
+                Inventory.SendItemsNextFrame = true;
+
+                return item;
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to add an item to the player's inventory: {e}");
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -823,6 +1025,42 @@ namespace Nexus.Entities
                 for (int i = 0; i < amount; i++)
                     AddItem(item);
             }
+        }
+
+        /// <summary>
+        /// Causes the player to throw a grenade.
+        /// </summary>
+        /// <param name="type">The <see cref="GrenadeType"/> to be thrown.</param>
+        /// <param name="fullForce">Whether to throw with full or half force.</param>
+        /// <returns>The <see cref="Throwable"/> item that was spawned.</returns>
+        public ThrowableItem ThrowGrenade(GrenadeType type, bool fullForce = true)
+        {
+            ThrowableItem throwable;
+
+            switch (type)
+            {
+                case GrenadeType.Flashbang:
+                    throwable = BaseItem.Get<ThrowableItem>(ItemType.GrenadeFlash);
+                    break;
+                default:
+                    throwable = BaseItem.Get<ThrowableItem>(type == GrenadeType.Scp018 ? ItemType.SCP018 : ItemType.GrenadeHE);
+                    break;
+            }
+
+            ThrowItem(throwable, fullForce);
+
+            return throwable;
+        }
+
+        /// <summary>
+        /// Throw an item.
+        /// </summary>
+        /// <param name="throwable">The <see cref="Throwable"/> to be thrown.</param>
+        /// <param name="fullForce">Whether to throw with full or half force.</param>
+        public void ThrowItem(ThrowableItem throwable, bool fullForce = true)
+        {
+            throwable.Base.Owner = Hub;
+            throwable.Throw(fullForce);
         }
 
         /// <summary>
@@ -852,6 +1090,13 @@ namespace Nexus.Entities
 
             HintDisplay.Show(new TextHint(message, parameters, null, duration));
         }
+
+        /// <summary>
+        /// Sends a hitmarker to the client.
+        /// </summary>
+        /// <param name="size">The size of the hitmarker.</param>
+        public void ShowHitmarker(float size = 1f)
+            => Hitmarker.SendHitmarker(Connection, size);
 
         /// <summary>
         /// Sets the player's mute status.

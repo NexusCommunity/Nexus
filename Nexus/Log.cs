@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Nexus
 {
@@ -56,6 +57,34 @@ namespace Nexus
             => Add("DEBUG", source, message, ConsoleColor.White);
 
         /// <summary>
+        /// Adds a debug message to the server output.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void Debug(object message)
+            => Debug(Assembly.GetCallingAssembly().GetName().Name, message);
+
+        /// <summary>
+        /// Adds an informational message to the server output.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void Info(object message)
+            => Info(Assembly.GetCallingAssembly().GetName().Name, message);
+
+        /// <summary>
+        /// Adds a warning to the server output.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void Warn(object message)
+            => Warn(Assembly.GetCallingAssembly().GetName().Name, message);
+
+        /// <summary>
+        /// Adds an error to the server output.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void Error(object message)
+            => Error(Assembly.GetCallingAssembly().GetName().Name, message);
+
+        /// <summary>
         /// Adds a warning to the server output.
         /// </summary>
         /// <typeparam name="T">The type name that will be used as the source.</typeparam>
@@ -110,22 +139,10 @@ namespace Nexus
         public static void Exception(Exception exception)
             => Add("ERROR", "Nexus", exception, ConsoleColor.DarkRed);
 
-        internal static void NexusInfo(object message)
-            => Add("INFO", "Nexus", message, ConsoleColor.Cyan);
-
-        internal static void NexusWarn(object message)
-            => Add("WARN", "Nexus", message, ConsoleColor.DarkYellow);
-
-        internal static void NexusDebug(object message)
-            => Add("DEBUG", "Nexus", message, ConsoleColor.Magenta);
-
-        internal static void NexusError(object message)
-            => Add("ERROR", "Nexus", message, ConsoleColor.DarkRed);
-
-        internal static void NexusDev(object message)
+        internal static void Dev(object message)
         {
             if (BuildInfo.BuildType != Enums.BuildType.Release)
-                Add("DEV", message, ConsoleColor.Green);
+                Add("DEVELOPMENT", message, ConsoleColor.Green);
         }
 
         /// <summary>

@@ -135,6 +135,7 @@
     <Compile Include="Entities\PocketDimension.cs" />
     <Compile Include="Entities\PocketDimensionExit.cs" />
     <Compile Include="Entities\Ragdoll.cs" />
+    <Compile Include="Entities\RagdollInfo.cs" />
     <Compile Include="Entities\Rank.cs" />
     <Compile Include="Entities\Respawn.cs" />
     <Compile Include="Entities\Room.cs" />
@@ -311,6 +312,7 @@
     <Compile Include="Pools\PoolableObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BuildInfo.cs" />
+    <Compile Include="Toolkit\AmmoManager.cs" />
     <Compile Include="Toolkit\Container.cs" />
   </ItemGroup>
   <ItemGroup>

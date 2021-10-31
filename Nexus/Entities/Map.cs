@@ -171,7 +171,15 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets a list of all shooting targets on the map.
         /// </summary>
-        public static IReadOnlyList<Target> Targets => targets;
+        public static IReadOnlyList<Target> Targets
+        {
+            get
+            {
+                UpdateTargets();
+
+                return targets;
+            }
+        }
 
         /// <summary>
         /// Gets all <see cref="FlickerableLightController"/> instances on the server.
@@ -486,23 +494,46 @@ namespace Nexus.Entities
         internal static void OnSpawningTantrum(SpawningTantrum ev)
             => tantrums.Add(ev.Tantrum);
 
-        internal static void TargetDespawned(ShootingTarget target)
+        // Gets called every time someone calls the Targets property.
+        internal static void UpdateTargets()
         {
-            var old = targets;
+            var actual = ListPool<ShootingTarget>.Shared.Rent(FindArray<ShootingTarget>());
 
-            Log.DebugFeature<Map>($"Target despawned: {target.netId}");
+            Log.DebugFeature<Map>($"Updating targets.");
 
-            for (int i = 0; i < old.Count; i++)
+            int updatedTargets = 0;
+
+            if (targets.Count != actual.Count)
             {
-                var oldTarget = old[i];
+                Log.DebugFeature<Map>($"The current target list does not match the array of targets found in length.");
 
-                if (oldTarget.NetId == target.netId)
+                targets.Clear();
+
+                foreach (var act in actual)
                 {
-                    targets.RemoveAt(i);
+                    updatedTargets++;
 
-                    return;
+                    targets.Add(new Target(act));
                 }
             }
+            else
+            {
+                for (int i = 0; i < actual.Count; i++)
+                {
+                    if (targets[i].NetId != actual[i].netId)
+                    {
+                        Log.DebugFeature<Map>($"OLDTARGET ({i}) [{targets[i].NetId}] DOES NOT MATCH NEWTARGET ({i}) [{actual[i].NetworkId}!");
+
+                        targets[i] = new Target(actual[i], false);
+
+                        updatedTargets++;
+                    }
+                }
+            }
+
+            ListPool<ShootingTarget>.Shared.Return(actual);
+
+            Log.DebugFeature<Map>($"Updated {updatedTargets} target(s).");
         }
 
         #endregion

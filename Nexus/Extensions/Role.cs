@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using Nexus.Enums;
+
 namespace Nexus.Extensions
 {
     /// <summary>
@@ -53,6 +55,31 @@ namespace Nexus.Extensions
                     return Team.TUT;
                 default:
                     return Team.RIP;
+            }
+        }
+
+        /// <summary>
+        /// Gets the leading team of a team.
+        /// </summary>
+        /// <param name="team">The team.</param>
+        /// <returns>The leading team of the team.</returns>
+        public static LeadingTeam GetLeadingTeam(this Team team)
+        {
+            switch (team)
+            {
+                case Team.CDP:
+                case Team.CHI:
+                    return LeadingTeam.ChaosInsurgency;
+                case Team.MTF:
+                case Team.RSC:
+                    return LeadingTeam.FacilityForces;
+                case Team.RIP:
+                case Team.TUT:
+                    return LeadingTeam.Draw;
+                case Team.SCP:
+                    return LeadingTeam.Anomalies;
+                default:
+                    return LeadingTeam.Draw;
             }
         }
 

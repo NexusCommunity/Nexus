@@ -234,7 +234,7 @@ namespace Nexus.EventSystem
             Method = method;
             Invoker = invoker;
 
-            Log.NexusDev($"Event Handler created: {owner.FullName}.{method.Name}@{ev.FullName}@{type}");
+            Log.Dev($"Event Handler created: {owner.FullName}.{method.Name}@{ev.FullName}@{type}");
         }
 
         public void Invoke(Event ev = null)

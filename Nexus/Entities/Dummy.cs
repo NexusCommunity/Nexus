@@ -69,6 +69,16 @@ namespace Nexus.Entities
         public Quaternion Rotation { get => _player.RotationsQ; set => _player.RotationsQ = value; }
 
         /// <summary>
+        /// Gets the <see cref="Player"/> wrapper instance.
+        /// </summary>
+        public Player Controller { get => _player; }
+
+        /// <summary>
+        /// Gets the dummy's <see cref="global::ReferenceHub"/> component.
+        /// </summary>
+        public ReferenceHub ReferenceHub { get => _player?.Hub; }
+
+        /// <summary>
         /// Gets or sets the dummy's nickname.
         /// </summary>
         public string Nick { get => _player.Nickname; set => _player.Nickname = value; }
