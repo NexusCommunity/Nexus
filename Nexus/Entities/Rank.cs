@@ -62,14 +62,15 @@
             get => string.IsNullOrEmpty(_player?.Hub.serverRoles.HiddenBadge);
             set
             {
-                // ehhh
+                if (value)
+                {
+                    if (_player != null)
+                        _player.Hub.serverRoles.HiddenBadge = Text;
+                }
+                else
+                    _player.Hub.serverRoles.HiddenBadge = string.Empty;
             }
         }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the global rank is hidden or not.
-        /// </summary>
-        public bool IsGlobalHidden { get => IsHidden; set => IsHidden = value; }
 
         /// <summary>
         /// Gets the owner of this rank.

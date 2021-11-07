@@ -40,6 +40,9 @@ namespace Nexus.Patches
 
             foreach (Type type in assembly.GetTypes())
             {
+                if (type.Namespace != "Nexus.Patches.Events")
+                    continue;
+
                 string eventName = type.Name.Replace("Patch", "");
 
                 Type eventType = eventAssembly.GetType($"Nexus.Events.{eventName}");
@@ -47,6 +50,8 @@ namespace Nexus.Patches
                 if (eventType != null)
                 {
                     linkedPatches.Add(type, eventType);
+
+                    Log.DebugFeature<Manager>($"Linked {type.FullName} to {eventType.FullName}");
                 }
             }
 

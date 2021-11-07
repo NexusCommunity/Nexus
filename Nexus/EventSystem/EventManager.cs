@@ -85,6 +85,7 @@ namespace Nexus.EventSystem
         /// <param name="type">The type to register from.</param>
         public static void Register(Type type, object instance)
         {
+            // this happened for some reason
             if (type == typeof(Type))
                 return;
 

@@ -4,6 +4,8 @@ using Nexus.Enums;
 
 using UnityEngine;
 
+using System.Linq;
+
 namespace Nexus.Entities
 {
     /// <summary>
@@ -17,14 +19,39 @@ namespace Nexus.Entities
         {
             this.ctrl = ctrl;
 
-            IntakeDoor = Door.Get(ctrl._doors[0]);
-            OutputDoor = Door.Get(ctrl._doors[1]);
+            IntakeDoor = Door.Get(ctrl._doors.FirstOrDefault());
+            OutputDoor = Door.Get(ctrl._doors.LastOrDefault());
         }
 
         /// <summary>
         /// Gets or sets the SCP-914's knob setting.
         /// </summary>
         public KnobSetting Setting { get => (KnobSetting)ctrl.Network_knobSetting; set => ctrl.Network_knobSetting = (Scp914KnobSetting)value; }
+
+        /// <summary>
+        /// Gets the next SCP-914 knob setting.
+        /// </summary>
+        public KnobSetting NewSetting
+        {
+            get
+            {
+                switch (Setting)
+                {
+                    case KnobSetting.Rough:
+                        return KnobSetting.Coarse;
+                    case KnobSetting.Coarse:
+                        return KnobSetting.OneToOne;
+                    case KnobSetting.OneToOne:
+                        return KnobSetting.Fine;
+                    case KnobSetting.Fine:
+                        return KnobSetting.VeryFine;
+                    case KnobSetting.VeryFine:
+                        return KnobSetting.Rough;
+                    default:
+                        return KnobSetting.Rough;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets the intake's <see cref="Transform"/>.

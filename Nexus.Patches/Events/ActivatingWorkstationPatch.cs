@@ -35,6 +35,7 @@ namespace Nexus.Patches.Events
                 if (colliderId == __instance._activateCollder.ColliderId && __instance.Status == 0)
                 {
                     __instance.NetworkStatus = 1;
+
                     __instance._serverStopwatch.Restart();
                 }
 

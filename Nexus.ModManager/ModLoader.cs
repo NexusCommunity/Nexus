@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
-using Nexus.Mod;
 using Nexus.Interfaces;
 using Nexus.Translations;
 using Nexus.Commands;
@@ -19,6 +18,9 @@ using YamlDotNet.Serialization.NodeDeserializers;
 
 namespace Nexus.ModManager
 {
+    /// <summary>
+    /// Loads all mods.
+    /// </summary>
     public static class ModLoader
     {
         internal static Dictionary<string, IModBase<IConfig>> mods;
@@ -93,9 +95,18 @@ namespace Nexus.ModManager
 
             UnityEngine.Application.quitting += Functions.HandleServerQuit;
 
+            UnityEngine.Application.wantsToQuit += () =>
+            {
+                Functions.HandleServerQuit();
+
+                return true;
+            };
+
+            AppDomain.CurrentDomain.ProcessExit += (x, e) => { Functions.HandleServerQuit(); };
+
             ConfigHolder.Reload();
 
-            if (!BuildInfo.IsCompatible())
+            if (!BuildInfo.IsCompatible() && !ConfigHolder.Nexus.LoadIncompatible)
             {
                 Log.Error("Nexus", $"Version mismatch! This version of Nexus cannot be loaded with this server version! " +
                     $"(Expected: {BuildInfo.ExpectedServerVersion} | Server: {GameCore.Version.VersionString})");
@@ -121,7 +132,8 @@ namespace Nexus.ModManager
                 }
             }
 
-            Patcher.PatchPatches();
+            if (!Patcher.IsPatched)
+                Patcher.PatchPatches();
 
             var mods = ModLoader.mods;
             var ids = ModLoader.ids;
@@ -134,11 +146,6 @@ namespace Nexus.ModManager
 
                     if (newId.HasChanged(ids[file]))
                     {
-                        CommandManager.UnregisterCommands(value.Assembly);
-                        EventManager.Unregister(value.Assembly);
-
-                        value.Translations.Clear();
-
                         value.Disable();
 
                         ModLoader.mods.Remove(file);
@@ -232,11 +239,21 @@ namespace Nexus.ModManager
 
                 eventRegistered = true;
             }
+
+            EventManager.Invoke(new Events.ServerStarted());
         }
 
+        /// <summary>
+        /// Returns the path of the given mod assembly.
+        /// </summary>
+        /// <param name="assembly">The mod's assembly.</param>
+        /// <returns>The assembly's path.</returns>
         public static string GetPath(Assembly assembly)
             => paths.TryGetValue(assembly.GetName().Name, out string path) ? path : string.Empty;
 
+        /// <summary>
+        /// Enables all mods.
+        /// </summary>
         public static void Enable()
         {
             foreach (IModBase<IConfig> mod in mods.Values)
@@ -301,10 +318,15 @@ namespace Nexus.ModManager
             Functions.CollectGarbage();
 
             if (killServerProcess)
-                UnityEngine.Application.Quit();
+                Entities.Server.Kill();
         }
 
-        internal static IModBase<IConfig> Create(Assembly assembly)
+        /// <summary>
+        /// Tries to create an instance of a type in an assembly.
+        /// </summary>
+        /// <param name="assembly">The mod's assembly.</param>
+        /// <returns>The created mod instance.</returns>
+        public static IModBase<IConfig> Create(Assembly assembly)
         {
             try
             {

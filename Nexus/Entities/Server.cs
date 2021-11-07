@@ -118,8 +118,6 @@ namespace Nexus.Entities
             RoundAction = NextAction.Restart;
 
             stats.Roundrestart();
-
-            Kill();
         }
 
         /// <summary>

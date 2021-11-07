@@ -4,6 +4,7 @@ using System;
 
 using Nexus.Entities.Pickups.Base;
 using Nexus.Entities.Items.Base;
+using Nexus.Pools;
 using Nexus.Attributes;
 using Nexus.Events;
 using Nexus.Enums;
@@ -166,7 +167,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets the pocket dimension exits.
         /// </summary>
-        public static IReadOnlyList<PocketDimensionExit> PocketExits => PocketDimension?.Exits ?? null;
+        public static IReadOnlyList<PocketDimensionExit> PocketExits => PocketDimension?.Exits ?? EmptyList<PocketDimensionExit>.List;
 
         /// <summary>
         /// Gets a list of all shooting targets on the map.
@@ -254,6 +255,37 @@ namespace Nexus.Entities
         /// <returns>The component instance if found, null otherwise.</returns>
         public static T FindComponent<T>() where T : Component
             => UnityEngine.Object.FindObjectOfType<T>();
+
+        /// <summary>
+        /// Finds a GameObject by it's tag.
+        /// </summary>
+        /// <param name="tag">The tag to find.</param>
+        /// <returns>The gameobject.</returns>
+        public static GameObject FindByTag(string tag)
+        {
+            return GameObject.FindGameObjectWithTag(tag);
+        }
+
+        /// <summary>
+        /// Finds a Game Object by it's name. <b>DO NOT USE FREQUENTLY AS IT HAS A HUGE PERFORMANCE DOWNSIDE!</b>
+        /// </summary>
+        /// <param name="name">The name of the GameObject.</param>
+        /// <returns>The component of the GameObject.</returns>
+        public static Component FindByName(string name)
+        {
+            var gObjs = GameObject.FindObjectsOfType<Component>();
+
+            foreach (var go in gObjs)
+            {
+                if (go == null)
+                    continue;
+
+                if (go.name == name)
+                    return go;
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Gets all items of the specified type.
@@ -470,7 +502,7 @@ namespace Nexus.Entities
 
             recontain = FindComponent<Recontainer079>();
             lsc = FindComponent<LureSubjectContainer>();
-            femurBreaker = GameObject.FindGameObjectWithTag("FemurBreaker");
+            femurBreaker = FindByTag("FemurBreaker");
 
             if (PlayersList.host == null)
                 Log.DebugFeature<Map>("Failed to set the PlayersList.host instance!");

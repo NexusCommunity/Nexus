@@ -214,6 +214,15 @@ namespace Nexus.Extensions
         /// <param name="type">Model type.</param>
         public static void ChangeAppearance(this Player player, RoleType type)
         {
+            if (type == RoleType.None)
+            {
+                player.appearance = null;
+
+                return;
+            }
+
+            player.appearance = type;
+
             foreach (var target in PlayersList.Get(x => x != player))
                 SendFakeSyncVar(target, player.Hub.networkIdentity, typeof(CharacterClassManager), nameof(CharacterClassManager.NetworkCurClass), (sbyte)type);
         }

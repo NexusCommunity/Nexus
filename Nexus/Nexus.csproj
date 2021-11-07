@@ -41,6 +41,9 @@
     <Reference Include="Assembly-CSharp_publicized">
       <HintPath>..\..\References\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
+    <Reference Include="DissonanceVoip_publicized">
+      <HintPath>..\..\References\DissonanceVoip_publicized.dll</HintPath>
+    </Reference>
     <Reference Include="Mirror_publicized">
       <HintPath>..\..\References\Mirror_publicized.dll</HintPath>
     </Reference>
@@ -299,6 +302,7 @@
     <Compile Include="Extensions\Map.cs" />
     <Compile Include="Extensions\Mirror.cs" />
     <Compile Include="Extensions\NewInventoryExtensions.cs" />
+    <Compile Include="Extensions\Reflection.cs" />
     <Compile Include="Extensions\Role.cs" />
     <Compile Include="Extensions\Target.cs" />
     <Compile Include="Extensions\UnityExtensions.cs" />
@@ -308,12 +312,15 @@
     <Compile Include="Extensions\String.cs" />
     <Compile Include="Interfaces\IConfig.cs" />
     <Compile Include="Interfaces\IModBase.cs" />
+    <Compile Include="Pools\EmptyList.cs" />
     <Compile Include="Pools\ObjectPool.cs" />
     <Compile Include="Pools\PoolableObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BuildInfo.cs" />
     <Compile Include="Toolkit\AmmoManager.cs" />
     <Compile Include="Toolkit\Container.cs" />
+    <Compile Include="Toolkit\EnumHelper.cs" />
+    <Compile Include="Toolkit\RandomIdGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Events\ExplodingGrenade.cs" />

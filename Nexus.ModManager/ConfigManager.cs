@@ -19,7 +19,7 @@ namespace Nexus.ModManager
 
             FieldInfo[] fields = type.GetFields(BindingFlags.Public);
 
-            string path = $"{Loader.Loader.Configs}/{type.Assembly.GetName().Name}.yml";
+            string path = $"{Loader.Loader.Configs}/{type.Name}.yml";
 
             if (fields != null && fields.Length > 0)
             {

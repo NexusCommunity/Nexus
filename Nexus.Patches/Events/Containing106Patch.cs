@@ -32,7 +32,7 @@ namespace Nexus.Patches.Events
                         Containing106 ev = EventManager.Invoke(new Containing106(player, PlayersList.Get(__instance._hub), true));
 
                         if (!ev.IsAllowed)
-                            continue;
+                            return false;
 
 						player.Hub.scp106PlayerScript.Contain(__instance._hub);
 

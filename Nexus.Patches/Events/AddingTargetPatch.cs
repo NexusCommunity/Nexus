@@ -1,5 +1,4 @@
 ﻿using Nexus.Entities;
-using Nexus.Enums;
 using Nexus.Events;
 using Nexus.EventSystem;
 
@@ -20,11 +19,19 @@ namespace Nexus.Patches.Events
             try
             {
                 Player player = PlayersList.Get(target);
+                Player scp = PlayersList.Get(__instance.Hub);
 
                 if (!__instance.CanReceiveTargets || player == null || __instance._targets.Contains(player.Hub))
                     return false;
 
-                AddingTargetScp096 ev = EventManager.Invoke(new AddingTargetScp096(PlayersList.Get(__instance.Hub), player, __instance, true));
+                if (ConfigHolder.Scp096.DisableBypass && player.IsBypassModeEnabled
+                    || ConfigHolder.Scp096.DisableGodMode && player.IsGodModeEnabled
+                    || scp.TargetGhosts.Contains(player)
+                    || ConfigHolder.Scp096.DisallowedRoles.Contains(player.Role) 
+                    || PlayersList.Scp096TurnedPlayers.Contains(player))
+                    return false;
+
+                AddingTargetScp096 ev = EventManager.Invoke(new AddingTargetScp096(scp, player, __instance, true));
 
                 if (!ev.IsAllowed)
                     return false;

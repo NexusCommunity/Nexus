@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-using Nexus.Utilities;
+using Nexus;
 
 [assembly: AssemblyTitle("Nexus.Injector")]
 [assembly: AssemblyDescription("A small library for Nexus modding framework.")]

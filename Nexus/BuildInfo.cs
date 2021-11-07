@@ -24,7 +24,7 @@ namespace Nexus
         /// <summary>
         /// Gets the expected server version.
         /// </summary>
-        public static string ExpectedServerVersion { get; } = "11.0.0";
+        public static string ExpectedServerVersion { get; } = "11.0.3";
 
         /// <summary>
         /// Gets the version in a string (including the build type).

@@ -3,13 +3,14 @@
 using Mirror;
 
 using Nexus.Extensions;
+using Nexus.Abstractions;
 
 namespace Nexus.Entities
 {
     /// <summary>
     /// A wrapper for <see cref="BreakableWindow"/>.
     /// </summary>
-    public class Window
+    public class Window : NetworkObject
     {
         internal BreakableWindow window;
 
@@ -30,12 +31,12 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets the window's <see cref="UnityEngine.GameObject"/>.
         /// </summary>
-        public GameObject GameObject { get => window.gameObject; }
+        public override GameObject GameObject { get => window.gameObject; }
 
         /// <summary>
         /// Gets the window's network ID.
         /// </summary>
-        public uint NetId { get => window.netId; }
+        public override uint NetId { get => window.netId; }
 
         /// <summary>
         /// Gets or sets a boolean indicating whether the window is broken or not.
@@ -83,7 +84,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets or sets the window's position.
         /// </summary>
-        public Vector3 Position
+        public override Vector3 Position
         {
             get => window.transform.position;
             set
@@ -104,9 +105,32 @@ namespace Nexus.Entities
         }
 
         /// <summary>
+        /// Gets or sets the window's position.
+        /// </summary>
+        public override Vector3 Scale
+        {
+            get => window.transform.localScale;
+            set
+            {
+                NetworkServer.UnSpawn(GameObject);
+
+                Status = new WindowStatus
+                {
+                    IsBroken = IsBroken,
+                    Position = Position,
+                    Rotation = Rotation
+                };
+
+                window.transform.localScale = value;
+
+                NetworkServer.Spawn(GameObject);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the window's rotation.
         /// </summary>
-        public Quaternion Rotation
+        public override Quaternion Rotation
         {
             get => window.transform.rotation;
             set
@@ -152,7 +176,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Deletes the window.
         /// </summary>
-        public void Delete()
+        public override void Delete()
             => GameObject.Delete();
 
         /// <summary>

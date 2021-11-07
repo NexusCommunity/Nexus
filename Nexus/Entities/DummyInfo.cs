@@ -89,6 +89,9 @@ namespace Nexus.Entities
         public ReferenceHub SpawnWithHub()
             => Dummy.SpawnWithHub(this);
 
+        public Player SpawnWithPlayer()
+            => Dummy.SpawnWithPlayer(this);
+
         /// <summary>
         /// Gets the default spawning info for dummies.
         /// </summary>
@@ -99,10 +102,10 @@ namespace Nexus.Entities
             IpAddress = DefaultIpAddress,
             Nickname = DefaultName,
             PlayerId = DefaultPlayerId,
-            Position = null,
+            Position = Vector3.zero,
             Role = RoleType.None,
-            Rotation = null,
-            Scale = null,
+            Rotation = Quaternion.identity,
+            Scale = Vector3.one,
             UserId = DefaultUserId,
             SpawnAutomatically = true
         };

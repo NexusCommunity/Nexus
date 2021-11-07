@@ -152,7 +152,7 @@ namespace Nexus
         /// <param name="message">The message.</param>
         public static void DebugFeature<TFeature>(object message)
         {
-            if (!ConfigHolder.Server.DebugFeatures)
+            if (!ConfigHolder.Nexus.DebugFeatures)
                 return;
 
             Debug<TFeature>(message);

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-using Nexus.Utilities;
+using Nexus;
 
 [assembly: AssemblyTitle("Nexus.Patches")]
 [assembly: AssemblyDescription("An assembly containing all patches responsible for a functional event system.")]

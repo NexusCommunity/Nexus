@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 using Nexus.Extensions;
+using Nexus.Abstractions;
 
 using InventorySystem.Items.Firearms.Attachments;
 
@@ -9,7 +10,7 @@ namespace Nexus.Entities
     /// <summary>
     /// A wrapper for <see cref="WorkStation"/>.
     /// </summary>
-    public class Workstation
+    public class Workstation : NetworkObject
     {
         internal WorkstationController station;
 
@@ -28,27 +29,27 @@ namespace Nexus.Entities
         /// <summary>
         /// Gets the workstation's <see cref="UnityEngine.GameObject"/>.
         /// </summary>
-        public GameObject GameObject { get => station.gameObject; }
+        public override GameObject GameObject { get => station.gameObject; }
 
         /// <summary>
         /// Gets the station's network ID.
         /// </summary>
-        public uint NetId { get => station.netId; }
+        public override uint NetId { get => station.netId; }
 
         /// <summary>
         /// Gets or sets the workstation's position.
         /// </summary>
-        public Vector3 Position { get => station.transform.position; set => GameObject.Teleport(value); }
+        public override Vector3 Position { get => station.transform.position; set => GameObject.Teleport(value); }
 
         /// <summary>
         /// Gets or sets the workstation's rotation.
         /// </summary>
-        public Quaternion Rotation { get => station.transform.rotation; set => GameObject.Rotate(value); }
+        public override Quaternion Rotation { get => station.transform.rotation; set => GameObject.Rotate(value); }
 
         /// <summary>
         /// Gets or sets the workstation's scale.
         /// </summary>
-        public Vector3 Scale { get => station.transform.localScale; set => GameObject.Resize(value); }
+        public override Vector3 Scale { get => station.transform.localScale; set => GameObject.Resize(value); }
 
         /// <summary>
         /// Gets the currently active workstation user. Will return null if there isnt one.
@@ -58,7 +59,7 @@ namespace Nexus.Entities
         /// <summary>
         /// Deletes this workstation.
         /// </summary>
-        public void Delete()
+        public override void Delete()
             => station.gameObject.Delete();
 
         /// <summary>

@@ -6,12 +6,14 @@ using Nexus.Events;
 using Nexus.Attributes;
 using Nexus.Enums;
 using Nexus.EventSystem;
-using Nexus.Events;
 
 namespace Nexus.ModManager
 {
     public static class Functions
     {
+        /// <summary>
+        /// Logs warning about Nexus release type.
+        /// </summary>
         [EventHandler(typeof(RoundWaiting))]
         public static void LogWarnings()
         {
@@ -27,6 +29,11 @@ namespace Nexus.ModManager
                     $"product and may contain a lot of bugs!");
         }
 
+        /// <summary>
+        /// Gets a new ModId instance for the specified mod.
+        /// </summary>
+        /// <param name="mod">The mod to identify.</param>
+        /// <returns>The mod's identifier.</returns>
         public static ModId GetModId(IModBase<IConfig> mod)
             => new ModId
             {

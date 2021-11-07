@@ -39,6 +39,8 @@ namespace Nexus.Entities
     /// </summary>
     public class Player
     {
+        internal RoleType? appearance;
+
         internal readonly List<BaseItem> items;
         internal readonly List<BasePickup> droppedItems;
         internal readonly List<Ragdoll> ragdolls;
@@ -247,6 +249,11 @@ namespace Nexus.Entities
         public Rank Rank { get; }
 
         /// <summary>
+        /// Gets or sets the player's current voice profile.
+        /// </summary>
+        public VoiceProfile VoiceProfile { get => Dissonance._currentProfile; set => Dissonance.SetProfile(value); }
+
+        /// <summary>
         /// Gets or sets the player that cuffed this player.
         /// </summary>
         public Player Cuffer
@@ -281,6 +288,18 @@ namespace Nexus.Entities
         /// Gets or sets the player's current role.
         /// </summary>
         public RoleType Role { get => Hub.characterClassManager.NetworkCurClass; set => ChangeRole(value); }
+
+        /// <summary>
+        /// Gets or sets the role the player appears as while having a different role.
+        /// </summary>
+        public RoleType Appearance 
+        { 
+            get => appearance.HasValue ? appearance.Value : Role; 
+            set
+            {
+                this.ChangeAppearance(value);
+            }
+        }
 
         /// <summary>
         /// Gets the player's current <see cref="global::Team"/>.
@@ -562,6 +581,11 @@ namespace Nexus.Entities
         public bool IsWalking { get => MoveState == PlayerMovementState.Walking; }
 
         /// <summary>
+        /// Gets a value indicating whether the player is jumping or not.
+        /// </summary>
+        public bool IsJumping { get => Hub.fpc.isJumping; }
+
+        /// <summary>
         /// Gets a value indicating whether the player is sneaking or not.
         /// </summary>
         public bool IsSneaking { get => MoveState == PlayerMovementState.Sneaking; }
@@ -597,7 +621,10 @@ namespace Nexus.Entities
                 if (value)
                     Map.icom.Speaker = this;
                 else
-                    Map.icom.SpeakerObject = null;
+                {
+                    if (Map.icom.SpeakerObject != null && Map.icom.SpeakerObject == GameObject)
+                        Map.icom.SpeakerObject = null;
+                }
             }
         }
 
@@ -648,6 +675,21 @@ namespace Nexus.Entities
             }
         }
 
+        public bool IsGloballyMuted
+        {
+            get => Dissonance.GloballyMuted;
+            set
+            {
+                Dissonance.GloballyMuted = value;
+                IsMuted = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the player is using any kind of voice chat.
+        /// </summary>
+        public bool IsTransmitting { get => Dissonance.IsTransmittingOnAny(); }
+
         /// <summary>
         /// Gets or sets a value indicating whether this player is verified or not.
         /// </summary>
@@ -679,11 +721,52 @@ namespace Nexus.Entities
         public bool CanSendInputs { get => Hub.fpc.NetworkforceStopInputs; set => Hub.fpc.NetworkforceStopInputs = value; }
 
         /// <summary>
+        /// Gets a value indicating whether the player has changed appearance or not.
+        /// </summary>
+        public bool HasChangedAppearance { get => appearance.HasValue; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player can use the Intercom or not.
+        /// </summary>
+        public bool IntercomAsHuman { get => Dissonance.IntercomAsHuman; set => Dissonance.IntercomAsHuman = value; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player can use SCP-939's alt voice chat or not.
+        /// </summary>
+        public bool MimicAs939 { get => Dissonance.MimicAs939; set => Dissonance.MimicAs939 = value; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player can use SCP-079's speakers.
+        /// </summary>
+        public bool SpeakerAs079 { get => Dissonance.SpeakerAs079; set => Dissonance.SpeakerAs079 = value; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player can use the Radio or not.
+        /// </summary>
+        public bool RadioAsHuman { get => Dissonance.RadioAsHuman; set => Dissonance.RadioAsHuman = value; }
+
+        /// <summary>
+        /// Gets ot sets a value indicating whether the player can use the SCP chat or not.
+        /// </summary>
+        public bool ScpChat { get => Dissonance.SCPChat; set => Dissonance.SCPChat = value; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the player can use the Spectator chat or not.
+        /// </summary>
+        public bool SpectatorChat { get => Dissonance.SpectatorChat; set => Dissonance.SpectatorChat = value; }
+
+        /// <summary>
         /// Gets the distance from the other position.
         /// </summary>
         /// <param name="otherPos">The other position.</param>
         /// <returns>The distance from the other position.</returns>
         public float Distance(Vector3 otherPos) => Vector3.Distance(Position, otherPos);
+
+        /// <summary>
+        /// Resets the player's Dissonance component.
+        /// </summary>
+        public void ResetDissonance()
+            => Dissonance.ResetToDefault();
 
         /// <summary>
         /// Sets the player's <see cref="RoleType"/>.

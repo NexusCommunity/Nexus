@@ -24,10 +24,11 @@ namespace Nexus.Patches.Events
                 else if (Mathf.Abs(SpectatorCamera.Singleton.cam.transform.position.y) < 200f)
                     b = 1f;
 
-                AnnouncingDecontamination ev = EventManager.Invoke(new AnnouncingDecontamination((int)b, hard));
+                AnnouncingDecontamination ev = EventManager.Invoke(new AnnouncingDecontamination((int)__instance._curFunction, hard));
 
-                b = ev.Id;
                 hard = ev.Global;
+
+                __instance._curFunction = (DecontaminationController.DecontaminationPhase.PhaseFunction)ev.Id;
 
                 __instance.AnnouncementAudioSource.volume = Mathf.Lerp(__instance.AnnouncementAudioSource.volume, b, hard ? 1f : (Time.deltaTime * 4f));
 

@@ -103,6 +103,7 @@
     <Compile Include="Events\BlinkingPatch.cs" />
     <Compile Include="Events\CalmingDownPatch.cs" />
     <Compile Include="Events\Containing106Patch.cs" />
+    <Compile Include="Events\CreatingPortal106Patch.cs" />
     <Compile Include="Events\RoundStartingPatch.cs" />
     <Compile Include="Events\RoundWaitingPatch.cs" />
     <Compile Include="Manager.cs" />

@@ -27,21 +27,17 @@ namespace Nexus.Patches.Events
 
 				if (colliderId == 0)
 				{
-					__instance._remainingCooldown = __instance._knobChangeCooldown;
+					__instance._remainingCooldown = ConfigHolder.Scp914.KnobChangeCooldown;
 
-					Scp914KnobSetting scp914KnobSetting = __instance._knobSetting + 1;
-
-					if (scp914KnobSetting > Scp914KnobSetting.VeryFine)
-						scp914KnobSetting = Scp914KnobSetting.Rough;
-
-					ChangingKnob ev = EventManager.Invoke(new ChangingKnob(player, (KnobSetting)__instance.Network_knobSetting, (KnobSetting)scp914KnobSetting, true));
+					ChangingKnob ev = EventManager.Invoke(new ChangingKnob(player, Map.Scp914.Setting, Map.Scp914.NewSetting, true));
 
 					if (!ev.IsAllowed)
 						return false;
 
 					__instance.Network_knobSetting = (Scp914KnobSetting)ev.New;
 
-					__instance.RpcPlaySound(0);
+					if (ConfigHolder.Scp914.PlaySoundOnKnobChange)
+						__instance.RpcPlaySound(0);
 
 					return false;
 				}
@@ -58,7 +54,8 @@ namespace Nexus.Patches.Events
 				__instance._isUpgrading = true;
 				__instance._itemsAlreadyUpgraded = false;
 
-				__instance.RpcPlaySound(1);
+				if (ConfigHolder.Scp914.PlaySoundOnActivation)
+					__instance.RpcPlaySound(1);
 
 				return false;
             }

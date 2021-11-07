@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-using Nexus.Utilities;
+using Nexus;
 
 [assembly: AssemblyTitle("Nexus.Translations")]
 [assembly: AssemblyDescription("A translation management system for the Nexus modding framework.")]
